@@ -5,13 +5,13 @@ CD C:\git\AspNetCoreCertificateAuth\Certs
 ## Create Root CA
 
 ```
-New-SelfSignedCertificate -DnsName "root_ca_dev_damienbod.com", "root_ca_dev_damienbod.com" -CertStoreLocation "cert:\LocalMachine\My" -NotAfter (Get-Date).AddYears(20) -FriendlyName "root_ca_dev_damienbod.com" -KeyUsageProperty All -KeyUsage CertSign, CRLSign, DigitalSignature
+$rootcert = ( New-SelfSignedCertificate -DnsName "root_ca_dev_damienbod.com", "root_ca_dev_damienbod.com" -CertStoreLocation "cert:\LocalMachine\My" -NotAfter (Get-Date).AddYears(20) -FriendlyName "root_ca_dev_damienbod.com" -KeyUsageProperty All -KeyUsage CertSign, CRLSign, DigitalSignature )
 
 $mypwd = ConvertTo-SecureString -String "1234" -Force -AsPlainText
 
-Get-ChildItem -Path cert:\localMachine\my\"The thumbprint..." | Export-PfxCertificate -FilePath C:\git\root_ca_dev_damienbod.pfx -Password $mypwd
+Get-ChildItem -Path ("cert:\localMachine\my\"+$rootcert.Thumbprint) | Export-PfxCertificate -FilePath root_ca_dev_damienbod.pfx -Password $mypwd
 
-Export-Certificate -Cert cert:\localMachine\my\"The thumbprint..." -FilePath root_ca_dev_damienbod.crt
+Export-Certificate -Cert ("cert:\localMachine\my\"+$rootcert.Thumbprint) -FilePath root_ca_dev_damienbod.crt
 
 ```
 
@@ -26,13 +26,13 @@ https://social.msdn.microsoft.com/Forums/SqlServer/en-US/5ed119ef-1704-4be4-8a4f
 
 $mypwd = ConvertTo-SecureString -String "1234" -Force -AsPlainText
 
-$parentcert = ( Get-ChildItem -Path cert:\LocalMachine\My\"The thumbprint of the root..." )
+$parentcert = ( Get-ChildItem -Path ("cert:\LocalMachine\My\"+$rootcert.Thumbprint) )
 
-New-SelfSignedCertificate -certstorelocation cert:\localmachine\my -dnsname "intermediate_dev_damienbod.com" -Signer $parentcert -NotAfter (Get-Date).AddYears(20) -FriendlyName "intermediate_dev_damienbod.com" -KeyUsageProperty All -KeyUsage CertSign, CRLSign, DigitalSignature -TextExtension @("2.5.29.19={text}CA=1&pathlength=1")
+$intercert = (New-SelfSignedCertificate -certstorelocation cert:\localmachine\my -dnsname "intermediate_dev_damienbod.com" -Signer $parentcert -NotAfter (Get-Date).AddYears(20) -FriendlyName "intermediate_dev_damienbod.com" -KeyUsageProperty All -KeyUsage CertSign, CRLSign, DigitalSignature -TextExtension @("2.5.29.19={text}CA=1&pathlength=1"))
 
-Get-ChildItem -Path cert:\localMachine\my\"The thumbprint..." | Export-PfxCertificate -FilePath C:\git\AspNetCoreCertificateAuth\Certs\intermediate_dev_damienbod.pfx -Password $mypwd
+Get-ChildItem -Path ("cert:\localMachine\my\"+$intercert.Thumbprint) | Export-PfxCertificate -FilePath intermediate_dev_damienbod.pfx -Password $mypwd
 
-Export-Certificate -Cert cert:\localMachine\my\"The thumbprint..." -FilePath intermediate_dev_damienbod.crt
+Export-Certificate -Cert ("cert:\localMachine\my\"+$intercert.Thumbprint) -FilePath intermediate_dev_damienbod.crt
 
 
 ```
@@ -40,15 +40,15 @@ Export-Certificate -Cert cert:\localMachine\my\"The thumbprint..." -FilePath int
 ## Create Child Cert from Intermediate certificate
 
 ```
-$parentcert = ( Get-ChildItem -Path cert:\LocalMachine\My\"The thumbprint from the Intermediate certificate..." )
+$parentcert = ( Get-ChildItem -Path ("cert:\LocalMachine\My\"+$intercert.Thumbprint) )
 
-New-SelfSignedCertificate -certstorelocation cert:\localmachine\my -dnsname "child_a_dev_damienbod.com" -Signer $parentcert -NotAfter (Get-Date).AddYears(20) -FriendlyName "child_a_dev_damienbod.com"
+$childa = ( New-SelfSignedCertificate -certstorelocation cert:\localmachine\my -dnsname "child_a_dev_damienbod.com" -Signer $parentcert -NotAfter (Get-Date).AddYears(20) -FriendlyName "child_a_dev_damienbod.com" )
 
 $mypwd = ConvertTo-SecureString -String "1234" -Force -AsPlainText
 
-Get-ChildItem -Path cert:\localMachine\my\"The thumbprint..." | Export-PfxCertificate -FilePath C:\git\AspNetCoreCertificateAuth\Certs\child_a_dev_damienbod.pfx -Password $mypwd
+Get-ChildItem -Path ("cert:\localMachine\my\"+$childa.Thumbprint) | Export-PfxCertificate -FilePath child_a_dev_damienbod.pfx -Password $mypwd
 
-Export-Certificate -Cert cert:\localMachine\my\"The thumbprint..." -FilePath child_a_dev_damienbod.crt
+Export-Certificate -Cert ("cert:\localMachine\my\"+$childa.Thumbprint) -FilePath child_a_dev_damienbod.crt
 
 ```
 
