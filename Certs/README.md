@@ -55,15 +55,15 @@ Export-Certificate -Cert ("cert:\localMachine\my\"+$childa.Thumbprint) -FilePath
 ## Create Child Cert from Root
 
 ```
-$rootcert = ( Get-ChildItem -Path cert:\LocalMachine\My\"The thumbprint from the root cert..." )
+$rootcert = ( Get-ChildItem -Path ("cert:\localMachine\my\"+$rootcert.Thumbprint) )
 
-New-SelfSignedCertificate -certstorelocation cert:\localmachine\my -dnsname "child_a_dev_damienbod.com" -Signer $rootcert -NotAfter (Get-Date).AddYears(20) -FriendlyName "child_a_dev_damienbod.com"
+$childcert = ( New-SelfSignedCertificate -certstorelocation cert:\localmachine\my -dnsname "child_a_dev_damienbod.com" -Signer $rootcert -NotAfter (Get-Date).AddYears(20) -FriendlyName "child_a_dev_damienbod.com" )
 
 $mypwd = ConvertTo-SecureString -String "1234" -Force -AsPlainText
 
-Get-ChildItem -Path cert:\localMachine\my\"The thumbprint..." | Export-PfxCertificate -FilePath C:\git\AspNetCoreCertificateAuth\Certs\child_a_dev_damienbod.pfx -Password $mypwd
+Get-ChildItem -Path ("cert:\localMachine\my\"+$childcert.Thumbprint) | Export-PfxCertificate -FilePath child_a_dev_damienbod.pfx -Password $mypwd
 
-Export-Certificate -Cert cert:\localMachine\my\"The thumbprint..." -FilePath child_a_dev_damienbod.crt
+Export-Certificate -Cert ("cert:\localMachine\my\"+$childcert.Thumbprint) -FilePath child_a_dev_damienbod.crt
 
 ```
 
